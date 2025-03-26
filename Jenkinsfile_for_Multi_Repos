@@ -1,0 +1,77 @@
+pipeline {
+    agent any
+    
+    parameters {
+        string(defaultValue: 'https://github.com/Venkat3699/Bankingapp-CI.git', description: 'Choose the Repo Name', name: 'BANKINGAPP_CI')
+        string(defaultValue: 'master', description: 'Choose the Branch Name', name: 'BRANCH1')
+        string(defaultValue: 'https://github.com/Venkat3699/GC_Bankapp.git', description: 'Choose the Repo Name', name: 'GC_BANKAPP')
+        string(defaultValue: 'main', description: 'Choose the Branch Name', name: 'BRANCH2')
+    }   
+
+    stages {
+        stage('Code Checkout') {
+            steps {
+                script {
+                    // Checkout the first repository
+                    dir('Bankingapp-CI') {
+                        git branch: "${params.BRANCH1}", credentialsId: 'git-cred', url: "${params.BANKINGAPP_CI}"
+                    }
+                    
+                    // Checkout the second repository
+                    dir('GC_Bankapp') {
+                        git branch: "${params.BRANCH2}", credentialsId: 'git-cred', url: "${params.GC_BANKAPP}"
+                    }
+                }
+            }
+        }
+        
+        stage('Compile Both Repositories') {
+            steps {
+                script {
+                    // Compile the first repository
+                    dir('Bankingapp-CI') {
+                        sh 'mvn compile'
+                    }
+                    
+                    // Compile the second repository
+                    dir('GC_Bankapp') {
+                        sh 'mvn compile'
+                    }
+                }
+            }
+            
+        }
+        
+        stage('Unit Test cases for Both Repositories') {
+            steps {
+                script {
+                    // Unit Test cases for the first repository
+                    dir('Bankingapp-CI') {
+                        sh 'mvn test -DskipTests=true'
+                    }
+                    
+                    // Unit Test cases for the second repository
+                    dir('GC_Bankapp') {
+                        sh 'mvn test'
+                    }
+                }
+            }
+        }
+        
+        stage('Build for Both Repositories') {
+            steps {
+                script {
+                    // Build for the first repository
+                    dir('Bankingapp-CI') {
+                        sh 'mvn package -DskipTests=true'
+                    }
+                    
+                    // Build for the second repository
+                    dir('GC_Bankapp') {
+                        sh 'mvn package'
+                    }
+                }
+            }
+        }
+    }
+}
